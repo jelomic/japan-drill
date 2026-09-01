@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JapanDrill">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon.svg">
+<title>Japan Drill</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#181b22; --panel2:#20242e; --line:#2c313d;
+    --fg:#f5f6f8; --muted:#9aa3b2; --accent:#4f9dff; --accent2:#e23b3b;
+    --good:#2ecc71; --bad:#ff5a5a; --easy:#38d0c0; --again:#ff8a3d;
+    --tap:60px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-size:17px; line-height:1.4;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    -webkit-text-size-adjust:100%;
+  }
+  #app{max-width:520px; margin:0 auto; padding:14px 14px 96px;}
+  h1{font-size:1.3rem; margin:.2em 0;}
+  h2{font-size:1.05rem; margin:1.1em 0 .5em; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;}
+  .jp{font-family:"Hiragino Sans","Yu Gothic","Noto Sans JP","Meiryo",sans-serif;}
+  .kana-big{font-size:6rem; line-height:1.05; text-align:center; margin:.15em 0;}
+  .jp-phrase{font-size:2.2rem; line-height:1.3;}
+  .romaji{color:var(--accent); font-size:1.25rem;}
+  .muted{color:var(--muted);}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; margin:10px 0;}
+  .row{display:flex; gap:10px;}
+  .row.wrap{flex-wrap:wrap;}
+  button{
+    font-family:inherit; font-size:1.05rem; color:var(--fg);
+    background:var(--panel2); border:1px solid var(--line); border-radius:12px;
+    min-height:var(--tap); padding:12px 14px; cursor:pointer; width:100%;
+    -webkit-appearance:none; touch-action:manipulation;
+  }
+  button:active{background:#2a2f3a;}
+  button.primary{background:var(--accent); border-color:var(--accent); color:#04122a; font-weight:700;}
+  button.accent2{background:var(--accent2); border-color:var(--accent2); color:#fff; font-weight:700;}
+  button.ghost{background:transparent;}
+  button:disabled{opacity:.4;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+  input[type=text]{
+    width:100%; font-size:1.6rem; padding:14px; border-radius:12px;
+    background:var(--panel2); border:2px solid var(--line); color:var(--fg);
+    text-align:center; min-height:var(--tap);
+  }
+  input:focus{outline:none; border-color:var(--accent);}
+  .stat{display:flex; justify-content:space-between; align-items:baseline; padding:6px 0;}
+  .big-num{font-size:2rem; font-weight:700;}
+  .pill{display:inline-block; font-size:.8rem; padding:3px 9px; border-radius:999px; background:var(--panel2); border:1px solid var(--line); color:var(--muted);}
+  .pill.on{background:var(--good); color:#04220f; border-color:var(--good);}
+  .pill.locked{background:var(--panel); color:var(--muted);}
+  .feedback{min-height:2.4rem; text-align:center; font-size:1.3rem; font-weight:700;}
+  .feedback.ok{color:var(--good);} .feedback.no{color:var(--bad);}
+  .progress{height:8px; background:var(--panel2); border-radius:999px; overflow:hidden;}
+  .progress>i{display:block; height:100%; background:var(--accent);}
+  .navbar{position:fixed; bottom:0; left:0; right:0; background:var(--panel); border-top:1px solid var(--line);
+    display:flex; padding:6px 6px calc(6px + env(safe-area-inset-bottom)); gap:4px; z-index:20;}
+  .navbar button{border:none; background:transparent; border-radius:10px; font-size:.72rem; padding:8px 2px; line-height:1.5;}
+  .navbar button.active{color:var(--accent); background:var(--panel2);}
+  .navbar .ic{font-size:1.4rem; display:block;}
+  .timer{font-variant-numeric:tabular-nums; color:var(--muted);}
+  .filterbar{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin:8px 0;}
+  .filterbar button{width:auto; white-space:nowrap; min-height:44px; padding:8px 14px;}
+  .filterbar button.active{background:var(--accent); color:#04122a; border-color:var(--accent); font-weight:700;}
+  .browse-item{border-bottom:1px solid var(--line); padding:12px 2px;}
+  .toast{position:fixed; left:50%; transform:translateX(-50%); bottom:88px; background:var(--panel2);
+    border:1px solid var(--line); padding:10px 16px; border-radius:12px; z-index:30; max-width:90%;}
+  .center{text-align:center;}
+  a{color:var(--accent);}
+  .kbd-opt{font-size:2.6rem; padding:18px 8px;}
+  label.toggle{display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--line);}
+  hr{border:none; border-top:1px solid var(--line); margin:14px 0;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="navbar" id="nav"></div>
+
+<script>
+"use strict";
+/* ============================================================= *
+ *  Japan Drill — single-file offline survival Japanese trainer  *
+ * ============================================================= */
+
+/* -------------------- CONTENT -------------------- */
+
+// Katakana: base 46 + dakuten/handakuten + yoon combos.
+const KATAKANA = [
+  // base
+  ["ア","a"],["イ","i"],["ウ","u"],["エ","e"],["オ","o"],
+  ["カ","ka"],["キ","ki"],["ク","ku"],["ケ","ke"],["コ","ko"],
+  ["サ","sa"],["シ","shi"],["ス","su"],["セ","se"],["ソ","so"],
+  ["タ","ta"],["チ","chi"],["ツ","tsu"],["テ","te"],["ト","to"],
+  ["ナ","na"],["ニ","ni"],["ヌ","nu"],["ネ","ne"],["ノ","no"],
+  ["ハ","ha"],["ヒ","hi"],["フ","fu"],["ヘ","he"],["ホ","ho"],
+  ["マ","ma"],["ミ","mi"],["ム","mu"],["メ","me"],["モ","mo"],
+  ["ヤ","ya"],["ユ","yu"],["ヨ","yo"],
+  ["ラ","ra"],["リ","ri"],["ル","ru"],["レ","re"],["ロ","ro"],
+  ["ワ","wa"],["ヲ","wo"],["ン","n"],
+  // dakuten
+  ["ガ","ga"],["ギ","gi"],["グ","gu"],["ゲ","ge"],["ゴ","go"],
+  ["ザ","za"],["ジ","ji"],["ズ","zu"],["ゼ","ze"],["ゾ","zo"],
+  ["ダ","da"],["ヂ","ji"],["ヅ","zu"],["デ","de"],["ド","do"],
+  ["バ","ba"],["ビ","bi"],["ブ","bu"],["ベ","be"],["ボ","bo"],
+  // handakuten
+  ["パ","pa"],["ピ","pi"],["プ","pu"],["ペ","pe"],["ポ","po"],
+  // yoon combos
+  ["キャ","kya"],["キュ","kyu"],["キョ","kyo"],
+  ["シャ","sha"],["シュ","shu"],["ショ","sho"],
+  ["チャ","cha"],["チュ","chu"],["チョ","cho"],
+  ["ニャ","nya"],["ニュ","nyu"],["ニョ","nyo"],
+  ["ヒャ","hya"],["ヒュ","hyu"],["ヒョ","hyo"],
+  ["ミャ","mya"],["ミュ","myu"],["ミョ","myo"],
+  ["リャ","rya"],["リュ","ryu"],["リョ","ryo"],
+  ["ギャ","gya"],["ギュ","gyu"],["ギョ","gyo"],
+  ["ジャ","ja"],["ジュ","ju"],["ジョ","jo"],
+  ["ビャ","bya"],["ビュ","byu"],["ビョ","byo"],
+  ["ピャ","pya"],["ピュ","pyu"],["ピョ","pyo"]
+].map((x,i)=>({id:"k"+i, jp:x[0], romaji:x[1]}));
+
+// Some romaji have accepted alternates for typing tolerance.
+const ROMAJI_ALT = {
+  "shi":["si"], "chi":["ti"], "tsu":["tu"], "fu":["hu"],
+  "ji":["zi","di"], "zu":["du"], "sha":["sya"], "shu":["syu"], "sho":["syo"],
+  "cha":["tya"], "chu":["tyu"], "cho":["tyo"], "ja":["jya","zya"],
+  "ju":["jyu","zyu"], "jo":["jyo","zyo"], "wo":["o"]
+};
+
+// Numbers / money / counters / time. jp = kana+kanji.
+const NUMBERS = [
+  ["一 / いち","ichi","1"],
+  ["二 / に","ni","2"],
+  ["三 / さん","san","3"],
+  ["四 / よん","yon","4 (also shi)"],
+  ["五 / ご","go","5"],
+  ["六 / ろく","roku","6"],
+  ["七 / なな","nana","7 (also shichi)"],
+  ["八 / はち","hachi","8"],
+  ["九 / きゅう","kyuu","9"],
+  ["十 / じゅう","juu","10"],
+  ["百 / ひゃく","hyaku","100"],
+  ["千 / せん","sen","1,000"],
+  ["一万 / いちまん","ichiman","10,000"],
+  ["円 / えん","en","yen (money)"],
+  ["一人 / ひとり","hitori","1 person"],
+  ["二人 / ふたり","futari","2 people"],
+  ["三人 / さんにん","san-nin","3 people"],
+  ["一泊 / いっぱく","ippaku","1 night (stay)"],
+  ["二泊 / にはく","nihaku","2 nights"],
+  ["三泊 / さんぱく","sanpaku","3 nights"],
+  ["今 / いま","ima","now"],
+  ["何時 / なんじ","nanji","what time?"],
+  ["一時 / いちじ","ichiji","1 o'clock"],
+  ["半 / はん","han","half past"],
+  ["午前 / ごぜん","gozen","AM"],
+  ["午後 / ごご","gogo","PM"],
+  ["分 / ふん","fun","minute(s)"]
+].map((x,i)=>({id:"n"+i, jp:x[0], romaji:x[1], en:x[2]}));
+
+// 60 survival phrases across 6 scenarios.
+const PHRASES = [
+  // greetings
+  ["こんにちは","konnichiwa","Hello / Good afternoon","greetings"],
+  ["おはようございます","ohayō gozaimasu","Good morning","greetings"],
+  ["こんばんは","konbanwa","Good evening","greetings"],
+  ["ありがとうございます","arigatō gozaimasu","Thank you","greetings"],
+  ["すみません","sumimasen","Excuse me / Sorry","greetings"],
+  ["はい","hai","Yes","greetings"],
+  ["いいえ","iie","No","greetings"],
+  ["お願いします","onegai shimasu","Please","greetings"],
+  ["さようなら","sayōnara","Goodbye","greetings"],
+  ["わかりません","wakarimasen","I don't understand","greetings"],
+  // shopping
+  ["いくらですか","ikura desu ka","How much is it?","shopping"],
+  ["これをください","kore o kudasai","I'll take this","shopping"],
+  ["カードで払えますか","kādo de haraemasu ka","Can I pay by card?","shopping"],
+  ["袋はいりません","fukuro wa irimasen","I don't need a bag","shopping"],
+  ["試着できますか","shichaku dekimasu ka","Can I try it on?","shopping"],
+  ["高いです","takai desu","It's expensive","shopping"],
+  ["安くしてください","yasuku shite kudasai","Cheaper, please","shopping"],
+  ["これは何ですか","kore wa nan desu ka","What is this?","shopping"],
+  ["見ているだけです","mite iru dake desu","I'm just looking","shopping"],
+  ["レシートをください","reshīto o kudasai","Receipt, please","shopping"],
+  // trains / directions
+  ["駅はどこですか","eki wa doko desu ka","Where is the station?","trains"],
+  ["切符はどこで買えますか","kippu wa doko de kaemasu ka","Where do I buy a ticket?","trains"],
+  ["東京駅までお願いします","Tōkyō eki made onegai shimasu","To Tokyo Station, please","trains"],
+  ["この電車は〜に行きますか","kono densha wa ~ ni ikimasu ka","Does this train go to ~?","trains"],
+  ["何番線ですか","nanbansen desu ka","Which platform?","trains"],
+  ["次の駅は何ですか","tsugi no eki wa nan desu ka","What's the next station?","trains"],
+  ["乗り換えですか","norikae desu ka","Do I transfer?","trains"],
+  ["まっすぐですか","massugu desu ka","Is it straight ahead?","trains"],
+  ["右です / 左です","migi desu / hidari desu","On the right / left","trains"],
+  ["道に迷いました","michi ni mayoimashita","I'm lost","trains"],
+  // hostel check-in
+  ["チェックインお願いします","chekku-in onegai shimasu","Check-in, please","hostel"],
+  ["予約しています","yoyaku shite imasu","I have a reservation","hostel"],
+  ["一泊いくらですか","ippaku ikura desu ka","How much per night?","hostel"],
+  ["Wi-Fiはありますか","waifai wa arimasu ka","Is there Wi-Fi?","hostel"],
+  ["荷物を預かってもらえますか","nimotsu o azukatte moraemasu ka","Can you hold my luggage?","hostel"],
+  ["チェックアウトは何時ですか","chekku-auto wa nanji desu ka","What time is check-out?","hostel"],
+  ["鍵をなくしました","kagi o nakushimashita","I lost the key","hostel"],
+  ["シャワーはどこですか","shawā wa doko desu ka","Where is the shower?","hostel"],
+  ["もう一泊できますか","mō ippaku dekimasu ka","Can I stay one more night?","hostel"],
+  ["部屋を見せてください","heya o misete kudasai","Please show me the room","hostel"],
+  // restaurant
+  ["メニューをください","menyū o kudasai","Menu, please","restaurant"],
+  ["おすすめは何ですか","osusume wa nan desu ka","What do you recommend?","restaurant"],
+  ["これをお願いします","kore o onegai shimasu","This one, please","restaurant"],
+  ["お水をください","omizu o kudasai","Water, please","restaurant"],
+  ["お会計お願いします","okaikei onegai shimasu","Check, please","restaurant"],
+  ["ベジタリアンです","bejitarian desu","I'm vegetarian","restaurant"],
+  ["肉は食べられません","niku wa taberaremasen","I can't eat meat","restaurant"],
+  ["とても美味しいです","totemo oishii desu","It's very delicious","restaurant"],
+  ["持ち帰りできますか","mochikaeri dekimasu ka","Can I take it to go?","restaurant"],
+  ["アレルギーがあります","arerugī ga arimasu","I have an allergy","restaurant"],
+  // temple etiquette
+  ["写真を撮ってもいいですか","shashin o totte mo ii desu ka","May I take a photo?","temple"],
+  ["靴を脱ぎますか","kutsu o nugimasu ka","Should I take my shoes off?","temple"],
+  ["入場料はいくらですか","nyūjōryō wa ikura desu ka","How much is admission?","temple"],
+  ["御朱印をお願いします","goshuin o onegai shimasu","A goshuin stamp, please","temple"],
+  ["ここは入れますか","koko wa hairemasu ka","May I enter here?","temple"],
+  ["お手洗いはどこですか","otearai wa doko desu ka","Where is the toilet?","temple"],
+  ["静かにします","shizuka ni shimasu","I'll be quiet","temple"],
+  ["お参りの仕方を教えてください","omairi no shikata o oshiete kudasai","How do I pray here?","temple"],
+  ["開いていますか","aite imasu ka","Is it open?","temple"],
+  ["ありがとうございました","arigatō gozaimashita","Thank you (afterwards)","temple"]
+].map((x,i)=>({id:"p"+i, jp:x[0], romaji:x[1], en:x[2], scene:x[3]}));
+
+const SCENES = {
+  greetings:"Greetings", shopping:"Shopping", trains:"Trains & Directions",
+  hostel:"Hostel", restaurant:"Restaurant", temple:"Temple"
+};
+
+/* -------------------- CARD MODEL -------------------- */
+// A "card" is one reviewable unit with its own SR state.
+// type: kprod (type romaji), krecog (pick kana), phrase, number.
+// category (for unlock gating): katakana | numbers | phrases
+function buildCards(){
+  const cards = [];
+  KATAKANA.forEach(k=>{
+    cards.push({id:"kp_"+k.id, type:"kprod", cat:"katakana", ref:k});
+    cards.push({id:"kr_"+k.id, type:"krecog", cat:"katakana", ref:k});
+  });
+  NUMBERS.forEach(n=> cards.push({id:"nm_"+n.id, type:"number", cat:"numbers", ref:n}));
+  PHRASES.forEach(p=> cards.push({id:"ph_"+p.id, type:"phrase", cat:"phrases", ref:p}));
+  return cards;
+}
+const CARDS = buildCards();
+const CARD_BY_ID = Object.fromEntries(CARDS.map(c=>[c.id,c]));
+
+/* -------------------- STATE / STORAGE -------------------- */
+const STORE_KEY = "japandrill.v1";
+const SESSION_CAP_SEC = 15*60;
+
+function todayIndex(d){
+  d = d || new Date();
+  return Math.floor(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/86400000);
+}
+function ymd(d){ d=d||new Date(); return d.toISOString().slice(0,10); }
+
+let state = loadState();
+
+function defaultState(){
+  return {
+    startDate: ymd(),              // first launch; drives weekly unlocks
+    sr: {},                        // cardId -> {ivl, ease, reps, due, lapses}
+    kstats: {},                    // katakana char -> {seen, correct}
+    streak: {count:0, last:null},  // last = ymd string
+    overrides: {katakana:false, numbers:false, phrases:false, all:false},
+    daily: {date:ymd(), sec:0, done:0}
+  };
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return defaultState();
+    const s = Object.assign(defaultState(), JSON.parse(raw));
+    // roll daily counter if a new day started
+    if(s.daily.date !== ymd()) s.daily = {date:ymd(), sec:0, done:0};
+    return s;
+  }catch(e){ return defaultState(); }
+}
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+/* -------------------- UNLOCK LOGIC -------------------- */
+function currentWeek(){
+  const start = todayIndex(new Date(state.startDate+"T00:00:00"));
+  const diff = todayIndex() - start;
+  return Math.floor(diff/7) + 1; // week 1 = first 7 days
+}
+// katakana weeks 1-2, numbers week 3, phrases weeks 4-6
+function isUnlocked(cat){
+  if(state.overrides.all) return true;
+  if(state.overrides[cat]) return true;
+  const w = currentWeek();
+  if(cat==="katakana") return w>=1;
+  if(cat==="numbers")  return w>=3;
+  if(cat==="phrases")  return w>=4;
+  return false;
+}
+
+/* -------------------- SPACED REPETITION (SM-2) -------------------- */
+function srOf(cardId){
+  return state.sr[cardId] || {ivl:0, ease:2.5, reps:0, due:todayIndex(), lapses:0, isNew:true};
+}
+// quality 0..5. 0-2 = fail.
+function schedule(cardId, quality){
+  const s = srOf(cardId);
+  s.isNew = false;
+  if(quality < 3){
+    s.reps = 0; s.ivl = 1; s.lapses = (s.lapses||0)+1;
+  }else{
+    if(s.reps === 0) s.ivl = 1;
+    else if(s.reps === 1) s.ivl = 6;
+    else s.ivl = Math.round(s.ivl * s.ease);
+    s.reps += 1;
+  }
+  // ease update
+  s.ease = s.ease + (0.1 - (5-quality)*(0.08 + (5-quality)*0.02));
+  if(s.ease < 1.3) s.ease = 1.3;
+  s.due = todayIndex() + s.ivl;
+  state.sr[cardId] = s;
+  save();
+}
+
+function dueCards(filterType){
+  const t = todayIndex();
+  return CARDS.filter(c=>{
+    if(filterType && c.type!==filterType) return false;
+    if(!isUnlocked(c.cat)) return false;
+    return srOf(c.id).due <= t;
+  }).sort((a,b)=> srOf(a.id).due - srOf(b.id).due);
+}
+function dueCountAll(){ return dueCards(null).length; }
+
+/* -------------------- STREAK / SESSION -------------------- */
+function markStudied(){
+  const today = ymd();
+  if(state.streak.last === today){ /* already counted */ }
+  else{
+    const y = ymd(new Date(Date.now()-86400000));
+    state.streak.count = (state.streak.last === y) ? state.streak.count+1 : 1;
+    state.streak.last = today;
+  }
+  save();
+}
+function sessionRemaining(){ return Math.max(0, SESSION_CAP_SEC - state.daily.sec); }
+function addStudySeconds(sec){
+  if(state.daily.date !== ymd()) state.daily = {date:ymd(), sec:0, done:0};
+  state.daily.sec += sec; save();
+}
+
+/* -------------------- APP / ROUTER -------------------- */
+const app = document.getElementById("app");
+const nav = document.getElementById("nav");
+let route = "home";
+let toastTimer = null;
+
+function toast(msg){
+  const t = document.createElement("div");
+  t.className="toast"; t.textContent=msg; document.body.appendChild(t);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.remove(), 1800);
+}
+function el(html){ const d=document.createElement("div"); d.innerHTML=html.trim(); return d.firstChild; }
+function esc(s){ return String(s).replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+function go(r){ route=r; render(); window.scrollTo(0,0); }
+
+const NAV_ITEMS = [
+  ["home","🏠","Home"],
+  ["kprod","✍️","Katakana"],
+  ["krecog","🔤","Recog"],
+  ["phrase","💬","Phrases"],
+  ["browse","📖","Browse"],
+  ["settings","⚙️","Settings"]
+];
+function renderNav(){
+  nav.innerHTML="";
+  NAV_ITEMS.forEach(([r,ic,label])=>{
+    const b=document.createElement("button");
+    b.className = (route===r?"active":"");
+    b.innerHTML = `<span class="ic">${ic}</span>${label}`;
+    b.onclick=()=>go(r);
+    nav.appendChild(b);
+  });
+}
+
+function render(){
+  renderNav();
+  if(route==="home") return renderHome();
+  if(route==="kprod") return renderDrillKprod();
+  if(route==="krecog") return renderDrillKrecog();
+  if(route==="phrase") return renderDrillPhrase();
+  if(route==="browse") return renderBrowse();
+  if(route==="settings") return renderSettings();
+}
+
+/* -------------------- HOME -------------------- */
+function renderHome(){
+  const due = dueCountAll();
+  const w = currentWeek();
+  const rem = Math.ceil(sessionRemaining()/60);
+  const cats = ["katakana","numbers","phrases"];
+  const catLabels = {katakana:"Katakana", numbers:"Numbers & money", phrases:"Phrases"};
+
+  app.innerHTML = "";
+  app.appendChild(el(`
+    <div>
+      <h1>🗾 Japan Drill</h1>
+      <div class="card">
+        <div class="stat"><span class="muted">🔥 Streak</span><span class="big-num">${state.streak.count}</span></div>
+        <div class="stat"><span class="muted">📅 Cards due today</span><span class="big-num">${due}</span></div>
+        <div class="stat"><span class="muted">⏱ Session left today</span><span class="big-num">${rem}m</span></div>
+        <div class="stat"><span class="muted">Week (since ${esc(state.startDate)})</span><span class="pill">Week ${w}</span></div>
+      </div>
+    </div>
+  `));
+
+  const modes = el(`<div><h2>Study</h2></div>`);
+  const grid = document.createElement("div");
+  const modeDefs = [
+    ["kprod","✍️ Katakana drill","Type the romaji","katakana"],
+    ["krecog","🔤 Recognition","Romaji → pick the kana","katakana"],
+    ["phrase","💬 Phrases & numbers","Recall + self-grade","phrases"]
+  ];
+  modeDefs.forEach(([r,title,sub,cat])=>{
+    const n = dueCards(r==="phrase"?null:r).filter(c=> r!=="phrase" ? true : (c.type==="phrase"||c.type==="number")).length;
+    const dueN = r==="phrase"
+      ? dueCards("phrase").length + dueCards("number").length
+      : dueCards(r).length;
+    const unlocked = r==="phrase" ? (isUnlocked("phrases")||isUnlocked("numbers")) : isUnlocked(cat);
+    const c = document.createElement("div"); c.className="card";
+    c.innerHTML = `<div class="row" style="justify-content:space-between;align-items:center">
+        <div><div style="font-size:1.1rem;font-weight:700">${title}</div>
+        <div class="muted">${sub}</div></div>
+        <div class="pill ${unlocked?'on':'locked'}">${unlocked? dueN+" due" : "🔒 locked"}</div>
+      </div>`;
+    if(unlocked){ c.style.cursor="pointer"; c.onclick=()=>go(r); }
+    grid.appendChild(c);
+  });
+  modes.appendChild(grid);
+  app.appendChild(modes);
+
+  app.appendChild(el(`
+    <div>
+      <h2>Unlock status</h2>
+      <div class="card">
+        ${cats.map(c=>`<div class="stat"><span>${catLabels[c]}</span>
+          <span class="pill ${isUnlocked(c)?'on':'locked'}">${isUnlocked(c)?'unlocked':'locked'}</span></div>`).join("")}
+        <div class="muted" style="margin-top:8px;font-size:.85rem">Override locks in ⚙️ Settings.</div>
+      </div>
+      <button class="ghost" id="browseBtn">📖 Browse everything</button>
+    </div>
+  `));
+  document.getElementById("browseBtn").onclick=()=>go("browse");
+}
+
+/* -------------------- SESSION DRIVER -------------------- */
+// Generic per-card session controller shared by drills.
+function startSession(queueBuilder, renderCard){
+  let queue = queueBuilder();
+  let cardStart = Date.now();
+  let sessionStart = Date.now();
+
+  if(queue.length===0){ renderEmpty("Nothing due right now — come back later, or unlock more in Settings."); return; }
+  if(sessionRemaining()<=0){ renderEmpty("Daily 15-minute session is done. 🎉 Rest your eyes."); return; }
+
+  function accrue(){
+    const spent = Math.round((Date.now()-cardStart)/1000);
+    addStudySeconds(Math.min(spent, 120)); // cap runaway (backgrounded tab)
+    cardStart = Date.now();
+  }
+  function next(){
+    accrue();
+    if(sessionRemaining()<=0){ renderEmpty("Daily 15-minute session is done. 🎉"); return; }
+    queue.shift();
+    if(queue.length===0){
+      // refill with anything still due (SR may have re-queued lapses for later today = no)
+      queue = queueBuilder();
+      if(queue.length===0){ renderEmpty("Queue empty — you're caught up! 🎉"); return; }
+    }
+    step();
+  }
+  function grade(cardId, quality){
+    schedule(cardId, quality);
+    markStudied();
+    state.daily.done++; save();
+    next();
+  }
+  function step(){
+    const card = queue[0];
+    renderCard(card, {grade, remaining:queue.length, elapsedCard:()=>Date.now()-cardStart});
+  }
+  step();
+
+  // pause accrual on tab hide
+  document.addEventListener("visibilitychange", function vh(){
+    if(document.hidden){ accrue(); }
+    else { cardStart = Date.now(); }
+  });
+}
+
+function drillHeader(remaining){
+  const rem = Math.ceil(sessionRemaining()/60);
+  return `<div class="row" style="justify-content:space-between;align-items:center">
+    <button class="ghost" style="width:auto;padding:8px 12px" onclick="go('home')">← Home</button>
+    <span class="timer">${remaining} in queue · ${rem}m left</span>
+  </div>`;
+}
+function renderEmpty(msg){
+  app.innerHTML="";
+  app.appendChild(el(`<div class="card center" style="margin-top:40px">
+    <div style="font-size:3rem">🎉</div>
+    <p>${esc(msg)}</p>
+    <button class="primary" onclick="go('home')">Back to home</button>
+  </div>`));
+}
+
+/* -------------------- KATAKANA PRODUCTION DRILL -------------------- */
+function normalizeRomaji(s){ return s.trim().toLowerCase().replace(/[āâ]/g,'a').replace(/[īî]/g,'i').replace(/[ūû]/g,'u').replace(/[ēê]/g,'e').replace(/[ōô]/g,'o'); }
+function romajiMatches(input, target){
+  const inp = normalizeRomaji(input);
+  if(inp===target) return true;
+  const alts = ROMAJI_ALT[target]||[];
+  return alts.includes(inp);
+}
+function trackKata(char, correct){
+  const st = state.kstats[char] || {seen:0, correct:0};
+  st.seen++; if(correct) st.correct++;
+  state.kstats[char]=st; save();
+}
+
+function renderDrillKprod(){
+  if(!isUnlocked("katakana")){ renderEmpty("Katakana is locked. Unlock it in ⚙️ Settings."); return; }
+  startSession(()=>dueCards("kprod"), (card, ctl)=>{
+    const k = card.ref;
+    app.innerHTML="";
+    const wrap = el(`
+      <div>
+        ${drillHeader(ctl.remaining)}
+        <div class="card">
+          <div class="jp kana-big">${k.jp}</div>
+          <input id="ans" type="text" inputmode="latin" autocomplete="off"
+             autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="type romaji">
+          <div class="feedback" id="fb">&nbsp;</div>
+        </div>
+        <button class="primary" id="check">Check</button>
+        <button class="ghost" id="skip">Don't know</button>
+      </div>
+    `);
+    app.appendChild(wrap);
+    const inp = wrap.querySelector("#ans");
+    const fb = wrap.querySelector("#fb");
+    const checkBtn = wrap.querySelector("#check");
+    inp.focus();
+    let answered=false;
+
+    function commit(){
+      if(answered) return;
+      answered=true;
+      const t0 = ctl.elapsedCard();
+      const ok = romajiMatches(inp.value, k.romaji);
+      trackKata(k.jp, ok);
+      inp.blur();
+      if(ok){
+        fb.textContent = "✓ " + k.romaji; fb.className="feedback ok";
+        // fast + correct => Easy(5), else Good(4)
+        const q = t0 < 3500 ? 5 : 4;
+        setTimeout(()=>ctl.grade(card.id, q), 350);
+      }else{
+        fb.textContent = "✗ answer: " + k.romaji; fb.className="feedback no";
+        checkBtn.textContent="Next →"; checkBtn.onclick=()=>ctl.grade(card.id, 1);
+        answered=false; // allow the Next button to fire grade
+        checkBtn.dataset.mode="next";
+      }
+    }
+    checkBtn.onclick=()=>{
+      if(checkBtn.dataset.mode==="next"){ ctl.grade(card.id, 1); return; }
+      commit();
+    };
+    wrap.querySelector("#skip").onclick=()=>{
+      if(answered) return; answered=true;
+      trackKata(k.jp,false);
+      fb.textContent="answer: "+k.romaji; fb.className="feedback no";
+      checkBtn.textContent="Next →"; checkBtn.dataset.mode="next";
+      checkBtn.onclick=()=>ctl.grade(card.id,1);
+    };
+    inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault();
+      if(checkBtn.dataset.mode==="next") ctl.grade(card.id,1); else commit(); } });
+  });
+}
+
+/* -------------------- RECOGNITION DRILL -------------------- */
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function renderDrillKrecog(){
+  if(!isUnlocked("katakana")){ renderEmpty("Katakana is locked. Unlock it in ⚙️ Settings."); return; }
+  startSession(()=>dueCards("krecog"), (card, ctl)=>{
+    const k = card.ref;
+    // build 6 options: correct + 5 distractors (unique kana)
+    const pool = shuffle(KATAKANA.filter(x=>x.jp!==k.jp)).slice(0,5);
+    const opts = shuffle([k].concat(pool));
+    app.innerHTML="";
+    const wrap = el(`
+      <div>
+        ${drillHeader(ctl.remaining)}
+        <div class="card center">
+          <div class="muted">Which kana is…</div>
+          <div class="romaji" style="font-size:2.4rem;margin:.2em 0">${k.romaji}</div>
+          <div class="feedback" id="fb">&nbsp;</div>
+        </div>
+        <div class="grid3" id="opts"></div>
+      </div>
+    `);
+    app.appendChild(wrap);
+    const fb = wrap.querySelector("#fb");
+    const grid = wrap.querySelector("#opts");
+    let answered=false;
+    opts.forEach(o=>{
+      const b=document.createElement("button");
+      b.className="jp kbd-opt"; b.textContent=o.jp;
+      b.onclick=()=>{
+        if(answered) return; answered=true;
+        const ok = o.jp===k.jp;
+        trackKata(k.jp, ok);
+        [...grid.children].forEach(c=>{ if(c.textContent===k.jp) c.style.borderColor="var(--good)"; });
+        if(ok){ b.style.background="var(--good)"; b.style.color="#04220f"; fb.textContent="✓"; fb.className="feedback ok";
+          setTimeout(()=>ctl.grade(card.id, ctl.elapsedCard()<3000?5:4), 350);
+        }else{
+          b.style.background="var(--bad)"; b.style.color="#fff"; fb.textContent="✗ = "+k.jp; fb.className="feedback no";
+          const nx=document.createElement("button"); nx.className="primary"; nx.textContent="Next →";
+          nx.style.marginTop="10px"; nx.onclick=()=>ctl.grade(card.id,1);
+          wrap.appendChild(nx);
+        }
+      };
+      grid.appendChild(b);
+    });
+  });
+}
+
+/* -------------------- PHRASE / NUMBER DRILL -------------------- */
+function renderDrillPhrase(){
+  if(!isUnlocked("phrases") && !isUnlocked("numbers")){ renderEmpty("Phrases & numbers are locked. Unlock in ⚙️ Settings."); return; }
+  startSession(()=>{
+    // interleave due phrases and numbers
+    return shuffle(dueCards("phrase").concat(dueCards("number")));
+  }, (card, ctl)=>{
+    const r = card.ref;
+    const isNum = card.type==="number";
+    const prompt = isNum ? r.en : r.en;
+    const tag = isNum ? "number" : (SCENES[r.scene]||r.scene);
+    app.innerHTML="";
+    const wrap = el(`
+      <div>
+        ${drillHeader(ctl.remaining)}
+        <div class="card center">
+          <div class="pill">${esc(tag)}</div>
+          <div style="font-size:1.5rem;margin:.5em 0 .3em">${esc(prompt)}</div>
+          <div id="reveal" style="display:none">
+            <hr>
+            <div class="jp jp-phrase">${esc(r.jp)}</div>
+            <div class="romaji" style="margin-top:.3em">${esc(r.romaji)}</div>
+          </div>
+        </div>
+        <div id="controls"></div>
+      </div>
+    `);
+    app.appendChild(wrap);
+    const controls = wrap.querySelector("#controls");
+    const revealBtn = el(`<button class="primary">Show answer</button>`);
+    revealBtn.onclick=()=>{
+      wrap.querySelector("#reveal").style.display="block";
+      controls.innerHTML="";
+      const g = el(`<div class="grid3">
+        <button class="ghost" style="border-color:var(--again);color:var(--again)">Again</button>
+        <button class="ghost" style="border-color:var(--good);color:var(--good)">Good</button>
+        <button class="ghost" style="border-color:var(--easy);color:var(--easy)">Easy</button>
+      </div>`);
+      const [again,good,easy]=g.querySelectorAll("button");
+      again.onclick=()=>ctl.grade(card.id,1);
+      good.onclick =()=>ctl.grade(card.id,4);
+      easy.onclick =()=>ctl.grade(card.id,5);
+      controls.appendChild(g);
+    };
+    controls.appendChild(revealBtn);
+  });
+}
+
+/* -------------------- BROWSE -------------------- */
+let browseFilter = "all";
+function renderBrowse(){
+  app.innerHTML="";
+  const tags = ["all"].concat(Object.keys(SCENES)).concat(["numbers","katakana"]);
+  const labelFor = t => t==="all"?"All":(SCENES[t]|| (t==="numbers"?"Numbers":"Katakana"));
+  const head = el(`<div><h1>📖 Browse</h1>
+    <div class="filterbar" id="filters"></div></div>`);
+  app.appendChild(head);
+  const fbar = head.querySelector("#filters");
+  tags.forEach(t=>{
+    const b=document.createElement("button");
+    b.textContent=labelFor(t); b.className=(browseFilter===t?"active":"");
+    b.onclick=()=>{ browseFilter=t; renderBrowse(); };
+    fbar.appendChild(b);
+  });
+
+  const list = document.createElement("div"); list.className="card";
+  let items=[];
+  if(browseFilter==="katakana"){
+    items = KATAKANA.map(k=>({jp:k.jp, romaji:k.romaji, en:accuracyStr(k.jp), scene:"katakana"}));
+  }else if(browseFilter==="numbers"){
+    items = NUMBERS.map(n=>({jp:n.jp, romaji:n.romaji, en:n.en, scene:"numbers"}));
+  }else{
+    let ph = PHRASES;
+    if(browseFilter!=="all") ph = PHRASES.filter(p=>p.scene===browseFilter);
+    items = ph.map(p=>({jp:p.jp, romaji:p.romaji, en:p.en, scene:p.scene}));
+    if(browseFilter==="all"){
+      items = items.concat(NUMBERS.map(n=>({jp:n.jp,romaji:n.romaji,en:n.en,scene:"numbers"})));
+    }
+  }
+  if(items.length===0) list.innerHTML="<div class='muted'>No items.</div>";
+  items.forEach(it=>{
+    const d=document.createElement("div"); d.className="browse-item";
+    d.innerHTML = `<div class="jp jp-phrase">${esc(it.jp)}</div>
+      <div class="romaji">${esc(it.romaji)}</div>
+      <div class="muted">${esc(it.en||"")}</div>`;
+    list.appendChild(d);
+  });
+  app.appendChild(list);
+}
+function accuracyStr(char){
+  const st = state.kstats[char];
+  if(!st||!st.seen) return "not yet drilled";
+  return Math.round(100*st.correct/st.seen)+"% ("+st.correct+"/"+st.seen+")";
+}
+
+/* -------------------- SETTINGS -------------------- */
+function renderSettings(){
+  app.innerHTML="";
+  const w = currentWeek();
+  const wrap = el(`
+    <div>
+      <h1>⚙️ Settings</h1>
+      <div class="card">
+        <h2 style="margin-top:0">Unlock overrides</h2>
+        <div class="muted" style="font-size:.85rem;margin-bottom:6px">
+          Auto by week (you're on week ${w}): katakana wk 1–2, numbers wk 3, phrases wk 4–6.
+          Toggle to unlock early.</div>
+        <label class="toggle">Unlock everything now
+          <input type="checkbox" id="ovAll" style="width:auto;transform:scale(1.6)"></label>
+        <label class="toggle">Katakana
+          <input type="checkbox" id="ovKata" style="width:auto;transform:scale(1.6)"></label>
+        <label class="toggle">Numbers & money
+          <input type="checkbox" id="ovNum" style="width:auto;transform:scale(1.6)"></label>
+        <label class="toggle" style="border-bottom:none">Phrases
+          <input type="checkbox" id="ovPhr" style="width:auto;transform:scale(1.6)"></label>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top:0">Session</h2>
+        <div class="stat"><span class="muted">Studied today</span><span>${Math.floor(state.daily.sec/60)}m ${state.daily.sec%60}s</span></div>
+        <div class="stat"><span class="muted">Reviews today</span><span>${state.daily.done}</span></div>
+        <button class="ghost" id="resetSession">Reset today's 15-min timer</button>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top:0">Start date</h2>
+        <div class="muted" style="font-size:.85rem">Weekly unlocks count from here.</div>
+        <input type="text" id="startDate" value="${esc(state.startDate)}" style="font-size:1.1rem;margin-top:8px">
+        <button class="ghost" id="saveStart" style="margin-top:8px">Save start date</button>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top:0">Data</h2>
+        <button class="ghost" id="exportBtn">Export progress (copy JSON)</button>
+        <button class="accent2" id="resetAll" style="margin-top:8px">Reset ALL progress</button>
+      </div>
+      <p class="muted center" style="font-size:.8rem">Japan Drill · offline PWA · v1</p>
+    </div>
+  `);
+  app.appendChild(wrap);
+
+  const o=state.overrides;
+  wrap.querySelector("#ovAll").checked=o.all;
+  wrap.querySelector("#ovKata").checked=o.katakana;
+  wrap.querySelector("#ovNum").checked=o.numbers;
+  wrap.querySelector("#ovPhr").checked=o.phrases;
+  wrap.querySelector("#ovAll").onchange=e=>{o.all=e.target.checked; save();};
+  wrap.querySelector("#ovKata").onchange=e=>{o.katakana=e.target.checked; save();};
+  wrap.querySelector("#ovNum").onchange=e=>{o.numbers=e.target.checked; save();};
+  wrap.querySelector("#ovPhr").onchange=e=>{o.phrases=e.target.checked; save();};
+
+  wrap.querySelector("#resetSession").onclick=()=>{ state.daily={date:ymd(),sec:0,done:0}; save(); toast("Session timer reset"); renderSettings(); };
+  wrap.querySelector("#saveStart").onclick=()=>{
+    const v=wrap.querySelector("#startDate").value.trim();
+    if(/^\d{4}-\d{2}-\d{2}$/.test(v)){ state.startDate=v; save(); toast("Start date saved"); render(); }
+    else toast("Use YYYY-MM-DD");
+  };
+  wrap.querySelector("#exportBtn").onclick=()=>{
+    const txt=JSON.stringify(state);
+    if(navigator.clipboard) navigator.clipboard.writeText(txt).then(()=>toast("Copied to clipboard"),()=>prompt("Copy your data:",txt));
+    else prompt("Copy your data:",txt);
+  };
+  wrap.querySelector("#resetAll").onclick=()=>{
+    if(confirmDanger()){ localStorage.removeItem(STORE_KEY); state=defaultState(); save(); toast("Progress reset"); go("home"); }
+  };
+}
+// simple non-modal-blocking confirm using window.confirm is fine outside browser-automation constraints,
+// but keep a guard that won't wedge automation: use a two-tap pattern instead.
+let dangerArmed=false, dangerTimer=null;
+function confirmDanger(){
+  if(dangerArmed){ dangerArmed=false; return true; }
+  dangerArmed=true; toast("Tap 'Reset ALL' again within 3s to confirm");
+  clearTimeout(dangerTimer); dangerTimer=setTimeout(()=>dangerArmed=false,3000);
+  return false;
+}
+
+/* -------------------- BOOT -------------------- */
+render();
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
