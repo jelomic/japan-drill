@@ -18,8 +18,9 @@ runs with **zero network**.
 
 - **Katakana** — all 46 base + dakuten/handakuten + yōon combos (キャ etc), 104 total.
 - **Numbers & money** — 1–10, 100, 1,000, 10,000, 円, people/night counters, time words.
-- **60 phrases** across 6 scenarios: greetings, shopping, trains/directions,
-  hostel, restaurant, temple etiquette.
+- **80 phrases** across 8 scenarios: greetings, shopping, trains/directions,
+  hostel, restaurant, temple etiquette, taxi/konbini, and help/health
+  (feeling sick, pharmacy, ambulance, police, lost passport).
 
 ### Audio & visuals
 - **Pronunciation (🔊)** — every word and phrase can be spoken aloud in a
@@ -31,6 +32,18 @@ runs with **zero network**.
 - **Emoji mnemonics** — concrete words/phrases show an illustrative emoji
   (🚉 🎫 💴 🚿 📷 ⛩️ …) as a lightweight, offline "image" to aid recall. Abstract
   phrases show none by design.
+- **🔁 Repeat** — plays an item 3× in a row for pronunciation practice, next to
+  every 🔊 button.
+- **Speech speed** — Normal / Slow toggle in Settings, so you can hear phrases
+  slowly enough to imitate.
+
+### Extra modes & options
+- **🎧 Listening drill** (Home screen) — audio-first: it *speaks* the Japanese
+  with no text, you recall the meaning, then reveal + self-grade. Trains your
+  ear. Shares spaced-repetition state with the phrase deck.
+- **Hide romaji** — a Settings toggle to hide romaji in phrases/listening/browse
+  so you read real kana & kanji (as you'll see on signs and menus). Katakana
+  browse always keeps its readings.
 
 ### Modes
 - **Katakana drill** — see the character, type romaji, instant feedback, timed;

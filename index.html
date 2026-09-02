@@ -85,10 +85,17 @@
   button.spk{width:auto; min-height:48px; min-width:48px; padding:8px 12px; font-size:1.5rem;
     border-radius:999px; line-height:1; display:inline-flex; align-items:center; justify-content:center;}
   button.spk:active{background:var(--accent); }
+  button.spk.rep:active{background:var(--easy);}
+  .spkgroup{display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap;}
+  .spkgroup.col{flex-direction:column; gap:6px;}
   .emoji{font-size:3.4rem; line-height:1; margin:.1em 0;}
   .emoji-sm{font-size:2rem; line-height:1; flex:0 0 auto;}
   .browse-item .top{display:flex; align-items:center; gap:12px;}
   .browse-item .top .txt{flex:1; min-width:0;}
+  .seg{display:flex; gap:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; width:100%;}
+  .seg button{border:none; border-radius:0; background:var(--panel2); width:50%;}
+  .seg button.on{background:var(--accent); color:#04122a; font-weight:700;}
+  .hint{font-size:.85rem; color:var(--muted); margin:6px 0 2px;}
 </style>
 </head>
 <body>
@@ -244,13 +251,36 @@ const PHRASES = [
   ["静かにします","shizuka ni shimasu","I'll be quiet","temple","🤫"],
   ["お参りの仕方を教えてください","omairi no shikata o oshiete kudasai","How do I pray here?","temple","🙏"],
   ["開いていますか","aite imasu ka","Is it open?","temple","🔓"],
-  ["ありがとうございました","arigatō gozaimashita","Thank you (afterwards)","temple","⛩️"]
+  ["ありがとうございました","arigatō gozaimashita","Thank you (afterwards)","temple","⛩️"],
+  // taxi & konbini
+  ["タクシーを呼んでください","takushī o yonde kudasai","Please call a taxi","taxi","🚕"],
+  ["ここまでお願いします","koko made onegai shimasu","To here, please (show map)","taxi","📍"],
+  ["空港までいくらですか","kūkō made ikura desu ka","How much to the airport?","taxi","✈️"],
+  ["ここで止めてください","koko de tomete kudasai","Stop here, please","taxi","🛑"],
+  ["急いでください","isoide kudasai","Please hurry","taxi","⏩"],
+  ["温めてください","atatamete kudasai","Please heat it up","taxi","♨️"],
+  ["お箸をください","ohashi o kudasai","Chopsticks, please","taxi","🥢"],
+  ["ATMはありますか","ētīemu wa arimasu ka","Is there an ATM?","taxi","🏧"],
+  ["レジ袋はいりますか","reji-bukuro wa irimasu ka","Do you need a bag? (they ask)","taxi","🛍️"],
+  ["トイレを借りてもいいですか","toire o karite mo ii desu ka","May I use the toilet?","taxi","🚽"],
+  // help & health
+  ["助けてください","tasukete kudasai","Please help me","help","🆘"],
+  ["気分が悪いです","kibun ga warui desu","I feel sick","help","🤢"],
+  ["熱があります","netsu ga arimasu","I have a fever","help","🌡️"],
+  ["頭が痛いです","atama ga itai desu","I have a headache","help","🤕"],
+  ["お腹が痛いです","onaka ga itai desu","I have a stomachache","help","😖"],
+  ["薬はありますか","kusuri wa arimasu ka","Do you have medicine?","help","💊"],
+  ["病院はどこですか","byōin wa doko desu ka","Where is the hospital?","help","🏥"],
+  ["救急車を呼んでください","kyūkyūsha o yonde kudasai","Please call an ambulance","help","🚑"],
+  ["警察を呼んでください","keisatsu o yonde kudasai","Please call the police","help","🚓"],
+  ["パスポートをなくしました","pasupōto o nakushimashita","I lost my passport","help","🛂"]
 ].map((x,i)=>({id:"p"+i, jp:x[0], romaji:x[1], en:x[2], scene:x[3], img:x[4]||"",
   say:x[0].replace(/〜/g,"").replace(/\s*\/\s*/g,"、")}));
 
 const SCENES = {
   greetings:"Greetings", shopping:"Shopping", trains:"Trains & Directions",
-  hostel:"Hostel", restaurant:"Restaurant", temple:"Temple"
+  hostel:"Hostel", restaurant:"Restaurant", temple:"Temple",
+  taxi:"Taxi & Konbini", help:"Help & Health"
 };
 
 /* -------------------- CARD MODEL -------------------- */
@@ -286,16 +316,29 @@ if(HAS_TTS){
   pickJaVoice();
   speechSynthesis.onvoiceschanged = pickJaVoice;
 }
-// speak(text): pronounce Japanese text. Best-effort; silent if unsupported.
+// Playback rate from the user's speed setting (set in Settings).
+function currentRate(){
+  return (state && state.settings && state.settings.audioRate==="slow") ? 0.5 : 0.9;
+}
+function mkUtter(text){
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "ja-JP";
+  if(JA_VOICE) u.voice = JA_VOICE;
+  u.rate = currentRate();
+  return u;
+}
+// speak(text): pronounce Japanese text once. Best-effort; silent if unsupported.
 function speak(text){
   if(!HAS_TTS || !text) return;
+  try{ speechSynthesis.cancel(); speechSynthesis.speak(mkUtter(text)); }catch(e){}
+}
+// speakRepeat(text,n): say it n times in a row (queued) for drilling.
+function speakRepeat(text, n){
+  if(!HAS_TTS || !text) return;
+  n = n || 3;
   try{
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "ja-JP";
-    if(JA_VOICE) u.voice = JA_VOICE;
-    u.rate = 0.85; // a touch slow, easier to imitate
-    speechSynthesis.speak(u);
+    for(let i=0;i<n;i++) speechSynthesis.speak(mkUtter(text));
   }catch(e){}
 }
 // What to pronounce for a given content entry.
@@ -308,6 +351,16 @@ function speakerBtn(text, size){
   b.textContent = "🔊";
   if(size) b.style.fontSize = size;
   b.onclick = (e)=>{ e.stopPropagation(); speak(text); };
+  return b;
+}
+// A repeat button that plays the item several times for pronunciation practice.
+function repeatBtn(text, size){
+  const b = document.createElement("button");
+  b.className = "spk rep";
+  b.setAttribute("aria-label","Repeat pronunciation 3 times");
+  b.textContent = "🔁";
+  if(size) b.style.fontSize = size;
+  b.onclick = (e)=>{ e.stopPropagation(); speakRepeat(text, 3); };
   return b;
 }
 
@@ -330,6 +383,7 @@ function defaultState(){
     kstats: {},                    // katakana char -> {seen, correct}
     streak: {count:0, last:null},  // last = ymd string
     overrides: {katakana:false, numbers:false, phrases:false, all:false},
+    settings: {audioRate:"normal", hideRomaji:false},
     daily: {date:ymd(), sec:0, done:0}
   };
 }
@@ -457,6 +511,7 @@ function render(){
   if(route==="kprod") return renderDrillKprod();
   if(route==="krecog") return renderDrillKrecog();
   if(route==="phrase") return renderDrillPhrase();
+  if(route==="listen") return renderDrillListen();
   if(route==="browse") return renderBrowse();
   if(route==="settings") return renderSettings();
 }
@@ -487,14 +542,15 @@ function renderHome(){
   const modeDefs = [
     ["kprod","✍️ Katakana drill","Type the romaji","katakana"],
     ["krecog","🔤 Recognition","Romaji → pick the kana","katakana"],
-    ["phrase","💬 Phrases & numbers","Recall + self-grade","phrases"]
+    ["phrase","💬 Phrases & numbers","Recall + self-grade","phrases"],
+    ["listen","🎧 Listening","Hear it, recall the meaning","phrases"]
   ];
   modeDefs.forEach(([r,title,sub,cat])=>{
-    const n = dueCards(r==="phrase"?null:r).filter(c=> r!=="phrase" ? true : (c.type==="phrase"||c.type==="number")).length;
-    const dueN = r==="phrase"
+    const isPhrasePool = (r==="phrase" || r==="listen");
+    const dueN = isPhrasePool
       ? dueCards("phrase").length + dueCards("number").length
       : dueCards(r).length;
-    const unlocked = r==="phrase" ? (isUnlocked("phrases")||isUnlocked("numbers")) : isUnlocked(cat);
+    const unlocked = isPhrasePool ? (isUnlocked("phrases")||isUnlocked("numbers")) : isUnlocked(cat);
     const c = document.createElement("div"); c.className="card";
     c.innerHTML = `<div class="row" style="justify-content:space-between;align-items:center">
         <div><div style="font-size:1.1rem;font-weight:700">${title}</div>
@@ -729,8 +785,8 @@ function renderDrillPhrase(){
           <div id="reveal" style="display:none">
             <hr>
             <div class="jp jp-phrase">${esc(r.jp)}</div>
-            <div class="romaji" style="margin-top:.3em">${esc(r.romaji)}</div>
-            <div id="spkslot" style="margin-top:12px"></div>
+            ${state.settings.hideRomaji ? "" : `<div class="romaji" style="margin-top:.3em">${esc(r.romaji)}</div>`}
+            <div id="spkslot" class="spkgroup" style="margin-top:12px"></div>
           </div>
         </div>
         <div id="controls"></div>
@@ -741,8 +797,65 @@ function renderDrillPhrase(){
     const revealBtn = el(`<button class="primary">Show answer 🔊</button>`);
     revealBtn.onclick=()=>{
       wrap.querySelector("#reveal").style.display="block";
-      wrap.querySelector("#spkslot").appendChild(speakerBtn(sayOf(r)));
+      const slot = wrap.querySelector("#spkslot");
+      slot.appendChild(speakerBtn(sayOf(r)));
+      slot.appendChild(repeatBtn(sayOf(r)));
       speak(sayOf(r)); // auto-play on reveal (within the tap gesture)
+      controls.innerHTML="";
+      const g = el(`<div class="grid3">
+        <button class="ghost" style="border-color:var(--again);color:var(--again)">Again</button>
+        <button class="ghost" style="border-color:var(--good);color:var(--good)">Good</button>
+        <button class="ghost" style="border-color:var(--easy);color:var(--easy)">Easy</button>
+      </div>`);
+      const [again,good,easy]=g.querySelectorAll("button");
+      again.onclick=()=>ctl.grade(card.id,1);
+      good.onclick =()=>ctl.grade(card.id,4);
+      easy.onclick =()=>ctl.grade(card.id,5);
+      controls.appendChild(g);
+    };
+    controls.appendChild(revealBtn);
+  });
+}
+
+/* -------------------- LISTENING DRILL -------------------- */
+// Audio-first: it speaks the Japanese (no text), you recall the meaning,
+// then reveal + self-grade. Trains your ear. Shares SR state with phrases.
+function renderDrillListen(){
+  if(!isUnlocked("phrases") && !isUnlocked("numbers")){ renderEmpty("Phrases & numbers are locked. Unlock in ⚙️ Settings."); return; }
+  startSession(()=> shuffle(dueCards("phrase").concat(dueCards("number"))), (card, ctl)=>{
+    const r = card.ref;
+    const isNum = card.type==="number";
+    const tag = isNum ? "number" : (SCENES[r.scene]||r.scene);
+    app.innerHTML="";
+    const wrap = el(`
+      <div>
+        ${drillHeader(ctl.remaining)}
+        <div class="card center">
+          <div class="pill">🎧 listen · ${esc(tag)}</div>
+          <div class="emoji" aria-hidden="true">🔊</div>
+          <div class="muted" style="margin:.2em 0 .6em">Listen, then recall the meaning</div>
+          <div class="spkgroup" id="playslot"></div>
+          <div id="reveal" style="display:none">
+            <hr>
+            ${r.img ? `<div class="emoji" aria-hidden="true">${r.img}</div>` : ""}
+            <div class="jp jp-phrase">${esc(r.jp)}</div>
+            ${state.settings.hideRomaji ? "" : `<div class="romaji" style="margin-top:.3em">${esc(r.romaji)}</div>`}
+            <div style="font-size:1.4rem;margin-top:.4em">${esc(r.en)}</div>
+          </div>
+        </div>
+        <div id="controls"></div>
+      </div>
+    `);
+    app.appendChild(wrap);
+    const playslot = wrap.querySelector("#playslot");
+    playslot.appendChild(speakerBtn(sayOf(r)));
+    playslot.appendChild(repeatBtn(sayOf(r)));
+    speak(sayOf(r)); // auto-play on entry (within the tap gesture that got here)
+
+    const controls = wrap.querySelector("#controls");
+    const revealBtn = el(`<button class="primary">Show meaning</button>`);
+    revealBtn.onclick=()=>{
+      wrap.querySelector("#reveal").style.display="block";
       controls.innerHTML="";
       const g = el(`<div class="grid3">
         <button class="ghost" style="border-color:var(--again);color:var(--again)">Again</button>
@@ -779,7 +892,7 @@ function renderBrowse(){
   const list = document.createElement("div"); list.className="card";
   let items=[];
   if(browseFilter==="katakana"){
-    items = KATAKANA.map(k=>({jp:k.jp, romaji:k.romaji, en:accuracyStr(k.jp), img:"", say:k.jp}));
+    items = KATAKANA.map(k=>({jp:k.jp, romaji:k.romaji, en:accuracyStr(k.jp), img:"", say:k.jp, kata:true}));
   }else if(browseFilter==="numbers"){
     items = NUMBERS.map(n=>({jp:n.jp, romaji:n.romaji, en:n.en, img:n.img, say:n.say}));
   }else{
@@ -790,17 +903,24 @@ function renderBrowse(){
       items = items.concat(NUMBERS.map(n=>({jp:n.jp,romaji:n.romaji,en:n.en,img:n.img,say:n.say})));
     }
   }
+  // Hide romaji only where it's a reading aid (phrases/numbers), never for kana
+  // browse — there the romaji IS the thing you're looking up.
+  const hideRo = state.settings.hideRomaji;
   if(items.length===0) list.innerHTML="<div class='muted'>No items.</div>";
   items.forEach(it=>{
     const d=document.createElement("div"); d.className="browse-item";
     const top=document.createElement("div"); top.className="top";
     if(it.img){ const e=document.createElement("div"); e.className="emoji-sm"; e.textContent=it.img; top.appendChild(e); }
     const txt=document.createElement("div"); txt.className="txt";
+    const showRo = it.kata || !hideRo;
     txt.innerHTML = `<div class="jp jp-phrase">${esc(it.jp)}</div>
-      <div class="romaji">${esc(it.romaji)}</div>
+      ${showRo ? `<div class="romaji">${esc(it.romaji)}</div>` : ""}
       <div class="muted">${esc(it.en||"")}</div>`;
     top.appendChild(txt);
-    top.appendChild(speakerBtn(it.say));
+    const ctrl=document.createElement("div"); ctrl.className="spkgroup col";
+    ctrl.appendChild(speakerBtn(it.say));
+    ctrl.appendChild(repeatBtn(it.say));
+    top.appendChild(ctrl);
     d.appendChild(top);
     list.appendChild(d);
   });
@@ -835,6 +955,18 @@ function renderSettings(){
       </div>
 
       <div class="card">
+        <h2 style="margin-top:0">Audio &amp; display</h2>
+        <div class="hint">Speech speed</div>
+        <div class="seg" id="segRate">
+          <button data-r="normal">Normal</button>
+          <button data-r="slow">Slow 🐢</button>
+        </div>
+        <label class="toggle" style="border-bottom:none;margin-top:8px">Hide romaji (read real kana)
+          <input type="checkbox" id="hideRo" style="width:auto;transform:scale(1.6)"></label>
+        <div class="hint">🔊 plays once · 🔁 repeats 3× for practice.${HAS_TTS ? "" : " ⚠️ No Japanese voice detected on this device."}</div>
+      </div>
+
+      <div class="card">
         <h2 style="margin-top:0">Session</h2>
         <div class="stat"><span class="muted">Studied today</span><span>${Math.floor(state.daily.sec/60)}m ${state.daily.sec%60}s</span></div>
         <div class="stat"><span class="muted">Reviews today</span><span>${state.daily.done}</span></div>
@@ -853,7 +985,7 @@ function renderSettings(){
         <button class="ghost" id="exportBtn">Export progress (copy JSON)</button>
         <button class="accent2" id="resetAll" style="margin-top:8px">Reset ALL progress</button>
       </div>
-      <p class="muted center" style="font-size:.8rem">Japan Drill · offline PWA · v1</p>
+      <p class="muted center" style="font-size:.8rem">Japan Drill · offline PWA · v3</p>
     </div>
   `);
   app.appendChild(wrap);
@@ -867,6 +999,21 @@ function renderSettings(){
   wrap.querySelector("#ovKata").onchange=e=>{o.katakana=e.target.checked; save();};
   wrap.querySelector("#ovNum").onchange=e=>{o.numbers=e.target.checked; save();};
   wrap.querySelector("#ovPhr").onchange=e=>{o.phrases=e.target.checked; save();};
+
+  // audio speed segmented control
+  const segRate = wrap.querySelector("#segRate");
+  function paintRate(){
+    [...segRate.children].forEach(b=> b.classList.toggle("on", b.dataset.r===state.settings.audioRate));
+  }
+  paintRate();
+  [...segRate.children].forEach(b=> b.onclick=()=>{
+    state.settings.audioRate=b.dataset.r; save(); paintRate();
+    speak(state.settings.audioRate==="slow" ? "ゆっくり" : "ふつう"); // preview
+  });
+  // hide-romaji toggle
+  const hideRo = wrap.querySelector("#hideRo");
+  hideRo.checked = state.settings.hideRomaji;
+  hideRo.onchange=e=>{ state.settings.hideRomaji=e.target.checked; save(); toast(e.target.checked?"Romaji hidden":"Romaji shown"); };
 
   wrap.querySelector("#resetSession").onclick=()=>{ state.daily={date:ymd(),sec:0,done:0}; save(); toast("Session timer reset"); renderSettings(); };
   wrap.querySelector("#saveStart").onclick=()=>{

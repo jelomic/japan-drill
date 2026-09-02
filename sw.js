@@ -1,6 +1,6 @@
 // Japan Drill service worker — offline-first cache.
 // Bump CACHE version whenever the shipped files change.
-const CACHE = 'japandrill-v2';
+const CACHE = 'japandrill-v3';
 const ASSETS = [
   './',
   './index.html',
