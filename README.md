@@ -21,6 +21,17 @@ runs with **zero network**.
 - **60 phrases** across 6 scenarios: greetings, shopping, trains/directions,
   hostel, restaurant, temple etiquette.
 
+### Audio & visuals
+- **Pronunciation (🔊)** — every word and phrase can be spoken aloud in a
+  Japanese accent using the device's built-in speech engine (on iOS that's the
+  on-device *Kyoko* `ja-JP` voice). **No audio files are bundled and no network
+  is used** — it works fully offline. Tap the 🔊 button anywhere, and answers
+  auto-play when revealed. If a device has no Japanese voice installed, buttons
+  simply stay silent.
+- **Emoji mnemonics** — concrete words/phrases show an illustrative emoji
+  (🚉 🎫 💴 🚿 📷 ⛩️ …) as a lightweight, offline "image" to aid recall. Abstract
+  phrases show none by design.
+
 ### Modes
 - **Katakana drill** — see the character, type romaji, instant feedback, timed;
   per-character accuracy tracked (see it under Browse → Katakana). Typing is

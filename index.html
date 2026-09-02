@@ -82,6 +82,13 @@
   .kbd-opt{font-size:2.6rem; padding:18px 8px;}
   label.toggle{display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--line);}
   hr{border:none; border-top:1px solid var(--line); margin:14px 0;}
+  button.spk{width:auto; min-height:48px; min-width:48px; padding:8px 12px; font-size:1.5rem;
+    border-radius:999px; line-height:1; display:inline-flex; align-items:center; justify-content:center;}
+  button.spk:active{background:var(--accent); }
+  .emoji{font-size:3.4rem; line-height:1; margin:.1em 0;}
+  .emoji-sm{font-size:2rem; line-height:1; flex:0 0 auto;}
+  .browse-item .top{display:flex; align-items:center; gap:12px;}
+  .browse-item .top .txt{flex:1; min-width:0;}
 </style>
 </head>
 <body>
@@ -140,104 +147,106 @@ const ROMAJI_ALT = {
 
 // Numbers / money / counters / time. jp = kana+kanji.
 const NUMBERS = [
-  ["一 / いち","ichi","1"],
-  ["二 / に","ni","2"],
-  ["三 / さん","san","3"],
-  ["四 / よん","yon","4 (also shi)"],
-  ["五 / ご","go","5"],
-  ["六 / ろく","roku","6"],
-  ["七 / なな","nana","7 (also shichi)"],
-  ["八 / はち","hachi","8"],
-  ["九 / きゅう","kyuu","9"],
-  ["十 / じゅう","juu","10"],
-  ["百 / ひゃく","hyaku","100"],
-  ["千 / せん","sen","1,000"],
-  ["一万 / いちまん","ichiman","10,000"],
-  ["円 / えん","en","yen (money)"],
-  ["一人 / ひとり","hitori","1 person"],
-  ["二人 / ふたり","futari","2 people"],
-  ["三人 / さんにん","san-nin","3 people"],
-  ["一泊 / いっぱく","ippaku","1 night (stay)"],
-  ["二泊 / にはく","nihaku","2 nights"],
-  ["三泊 / さんぱく","sanpaku","3 nights"],
-  ["今 / いま","ima","now"],
-  ["何時 / なんじ","nanji","what time?"],
-  ["一時 / いちじ","ichiji","1 o'clock"],
-  ["半 / はん","han","half past"],
-  ["午前 / ごぜん","gozen","AM"],
-  ["午後 / ごご","gogo","PM"],
-  ["分 / ふん","fun","minute(s)"]
-].map((x,i)=>({id:"n"+i, jp:x[0], romaji:x[1], en:x[2]}));
+  ["一 / いち","ichi","1","1️⃣"],
+  ["二 / に","ni","2","2️⃣"],
+  ["三 / さん","san","3","3️⃣"],
+  ["四 / よん","yon","4 (also shi)","4️⃣"],
+  ["五 / ご","go","5","5️⃣"],
+  ["六 / ろく","roku","6","6️⃣"],
+  ["七 / なな","nana","7 (also shichi)","7️⃣"],
+  ["八 / はち","hachi","8","8️⃣"],
+  ["九 / きゅう","kyuu","9","9️⃣"],
+  ["十 / じゅう","juu","10","🔟"],
+  ["百 / ひゃく","hyaku","100","💯"],
+  ["千 / せん","sen","1,000","🔢"],
+  ["一万 / いちまん","ichiman","10,000","🔢"],
+  ["円 / えん","en","yen (money)","💴"],
+  ["一人 / ひとり","hitori","1 person","🧍"],
+  ["二人 / ふたり","futari","2 people","👥"],
+  ["三人 / さんにん","san-nin","3 people","👨‍👩‍👦"],
+  ["一泊 / いっぱく","ippaku","1 night (stay)","🛏️"],
+  ["二泊 / にはく","nihaku","2 nights","🛏️"],
+  ["三泊 / さんぱく","sanpaku","3 nights","🛏️"],
+  ["今 / いま","ima","now","⏳"],
+  ["何時 / なんじ","nanji","what time?","🕐"],
+  ["一時 / いちじ","ichiji","1 o'clock","🕐"],
+  ["半 / はん","han","half past","🕧"],
+  ["午前 / ごぜん","gozen","AM","🌅"],
+  ["午後 / ごご","gogo","PM","🌇"],
+  ["分 / ふん","fun","minute(s)","⏱️"]
+].map((x,i)=>({id:"n"+i, jp:x[0], romaji:x[1], en:x[2], img:x[3]||"",
+  say:(x[0].split(" / ")[1]||x[0])}));
 
 // 60 survival phrases across 6 scenarios.
 const PHRASES = [
   // greetings
-  ["こんにちは","konnichiwa","Hello / Good afternoon","greetings"],
-  ["おはようございます","ohayō gozaimasu","Good morning","greetings"],
-  ["こんばんは","konbanwa","Good evening","greetings"],
-  ["ありがとうございます","arigatō gozaimasu","Thank you","greetings"],
-  ["すみません","sumimasen","Excuse me / Sorry","greetings"],
-  ["はい","hai","Yes","greetings"],
-  ["いいえ","iie","No","greetings"],
-  ["お願いします","onegai shimasu","Please","greetings"],
-  ["さようなら","sayōnara","Goodbye","greetings"],
-  ["わかりません","wakarimasen","I don't understand","greetings"],
+  ["こんにちは","konnichiwa","Hello / Good afternoon","greetings","👋"],
+  ["おはようございます","ohayō gozaimasu","Good morning","greetings","🌅"],
+  ["こんばんは","konbanwa","Good evening","greetings","🌙"],
+  ["ありがとうございます","arigatō gozaimasu","Thank you","greetings","🙏"],
+  ["すみません","sumimasen","Excuse me / Sorry","greetings","🙇"],
+  ["はい","hai","Yes","greetings","✅"],
+  ["いいえ","iie","No","greetings","❌"],
+  ["お願いします","onegai shimasu","Please","greetings","🤲"],
+  ["さようなら","sayōnara","Goodbye","greetings","👋"],
+  ["わかりません","wakarimasen","I don't understand","greetings","❓"],
   // shopping
-  ["いくらですか","ikura desu ka","How much is it?","shopping"],
-  ["これをください","kore o kudasai","I'll take this","shopping"],
-  ["カードで払えますか","kādo de haraemasu ka","Can I pay by card?","shopping"],
-  ["袋はいりません","fukuro wa irimasen","I don't need a bag","shopping"],
-  ["試着できますか","shichaku dekimasu ka","Can I try it on?","shopping"],
-  ["高いです","takai desu","It's expensive","shopping"],
-  ["安くしてください","yasuku shite kudasai","Cheaper, please","shopping"],
-  ["これは何ですか","kore wa nan desu ka","What is this?","shopping"],
-  ["見ているだけです","mite iru dake desu","I'm just looking","shopping"],
-  ["レシートをください","reshīto o kudasai","Receipt, please","shopping"],
+  ["いくらですか","ikura desu ka","How much is it?","shopping","💰"],
+  ["これをください","kore o kudasai","I'll take this","shopping","🛍️"],
+  ["カードで払えますか","kādo de haraemasu ka","Can I pay by card?","shopping","💳"],
+  ["袋はいりません","fukuro wa irimasen","I don't need a bag","shopping","🚫"],
+  ["試着できますか","shichaku dekimasu ka","Can I try it on?","shopping","👕"],
+  ["高いです","takai desu","It's expensive","shopping","💸"],
+  ["安くしてください","yasuku shite kudasai","Cheaper, please","shopping","🔖"],
+  ["これは何ですか","kore wa nan desu ka","What is this?","shopping","❓"],
+  ["見ているだけです","mite iru dake desu","I'm just looking","shopping","👀"],
+  ["レシートをください","reshīto o kudasai","Receipt, please","shopping","🧾"],
   // trains / directions
-  ["駅はどこですか","eki wa doko desu ka","Where is the station?","trains"],
-  ["切符はどこで買えますか","kippu wa doko de kaemasu ka","Where do I buy a ticket?","trains"],
-  ["東京駅までお願いします","Tōkyō eki made onegai shimasu","To Tokyo Station, please","trains"],
-  ["この電車は〜に行きますか","kono densha wa ~ ni ikimasu ka","Does this train go to ~?","trains"],
-  ["何番線ですか","nanbansen desu ka","Which platform?","trains"],
-  ["次の駅は何ですか","tsugi no eki wa nan desu ka","What's the next station?","trains"],
-  ["乗り換えですか","norikae desu ka","Do I transfer?","trains"],
-  ["まっすぐですか","massugu desu ka","Is it straight ahead?","trains"],
-  ["右です / 左です","migi desu / hidari desu","On the right / left","trains"],
-  ["道に迷いました","michi ni mayoimashita","I'm lost","trains"],
+  ["駅はどこですか","eki wa doko desu ka","Where is the station?","trains","🚉"],
+  ["切符はどこで買えますか","kippu wa doko de kaemasu ka","Where do I buy a ticket?","trains","🎫"],
+  ["東京駅までお願いします","Tōkyō eki made onegai shimasu","To Tokyo Station, please","trains","🚅"],
+  ["この電車は〜に行きますか","kono densha wa ~ ni ikimasu ka","Does this train go to ~?","trains","🚃"],
+  ["何番線ですか","nanbansen desu ka","Which platform?","trains","🔢"],
+  ["次の駅は何ですか","tsugi no eki wa nan desu ka","What's the next station?","trains","➡️"],
+  ["乗り換えですか","norikae desu ka","Do I transfer?","trains","🔄"],
+  ["まっすぐですか","massugu desu ka","Is it straight ahead?","trains","⬆️"],
+  ["右です / 左です","migi desu / hidari desu","On the right / left","trains","↔️"],
+  ["道に迷いました","michi ni mayoimashita","I'm lost","trains","🗺️"],
   // hostel check-in
-  ["チェックインお願いします","chekku-in onegai shimasu","Check-in, please","hostel"],
-  ["予約しています","yoyaku shite imasu","I have a reservation","hostel"],
-  ["一泊いくらですか","ippaku ikura desu ka","How much per night?","hostel"],
-  ["Wi-Fiはありますか","waifai wa arimasu ka","Is there Wi-Fi?","hostel"],
-  ["荷物を預かってもらえますか","nimotsu o azukatte moraemasu ka","Can you hold my luggage?","hostel"],
-  ["チェックアウトは何時ですか","chekku-auto wa nanji desu ka","What time is check-out?","hostel"],
-  ["鍵をなくしました","kagi o nakushimashita","I lost the key","hostel"],
-  ["シャワーはどこですか","shawā wa doko desu ka","Where is the shower?","hostel"],
-  ["もう一泊できますか","mō ippaku dekimasu ka","Can I stay one more night?","hostel"],
-  ["部屋を見せてください","heya o misete kudasai","Please show me the room","hostel"],
+  ["チェックインお願いします","chekku-in onegai shimasu","Check-in, please","hostel","🔑"],
+  ["予約しています","yoyaku shite imasu","I have a reservation","hostel","📋"],
+  ["一泊いくらですか","ippaku ikura desu ka","How much per night?","hostel","💴"],
+  ["Wi-Fiはありますか","waifai wa arimasu ka","Is there Wi-Fi?","hostel","📶"],
+  ["荷物を預かってもらえますか","nimotsu o azukatte moraemasu ka","Can you hold my luggage?","hostel","🧳"],
+  ["チェックアウトは何時ですか","chekku-auto wa nanji desu ka","What time is check-out?","hostel","🕚"],
+  ["鍵をなくしました","kagi o nakushimashita","I lost the key","hostel","🔓"],
+  ["シャワーはどこですか","shawā wa doko desu ka","Where is the shower?","hostel","🚿"],
+  ["もう一泊できますか","mō ippaku dekimasu ka","Can I stay one more night?","hostel","🛏️"],
+  ["部屋を見せてください","heya o misete kudasai","Please show me the room","hostel","🚪"],
   // restaurant
-  ["メニューをください","menyū o kudasai","Menu, please","restaurant"],
-  ["おすすめは何ですか","osusume wa nan desu ka","What do you recommend?","restaurant"],
-  ["これをお願いします","kore o onegai shimasu","This one, please","restaurant"],
-  ["お水をください","omizu o kudasai","Water, please","restaurant"],
-  ["お会計お願いします","okaikei onegai shimasu","Check, please","restaurant"],
-  ["ベジタリアンです","bejitarian desu","I'm vegetarian","restaurant"],
-  ["肉は食べられません","niku wa taberaremasen","I can't eat meat","restaurant"],
-  ["とても美味しいです","totemo oishii desu","It's very delicious","restaurant"],
-  ["持ち帰りできますか","mochikaeri dekimasu ka","Can I take it to go?","restaurant"],
-  ["アレルギーがあります","arerugī ga arimasu","I have an allergy","restaurant"],
+  ["メニューをください","menyū o kudasai","Menu, please","restaurant","📋"],
+  ["おすすめは何ですか","osusume wa nan desu ka","What do you recommend?","restaurant","👍"],
+  ["これをお願いします","kore o onegai shimasu","This one, please","restaurant","🍽️"],
+  ["お水をください","omizu o kudasai","Water, please","restaurant","💧"],
+  ["お会計お願いします","okaikei onegai shimasu","Check, please","restaurant","🧾"],
+  ["ベジタリアンです","bejitarian desu","I'm vegetarian","restaurant","🥗"],
+  ["肉は食べられません","niku wa taberaremasen","I can't eat meat","restaurant","🚫"],
+  ["とても美味しいです","totemo oishii desu","It's very delicious","restaurant","😋"],
+  ["持ち帰りできますか","mochikaeri dekimasu ka","Can I take it to go?","restaurant","🥡"],
+  ["アレルギーがあります","arerugī ga arimasu","I have an allergy","restaurant","⚠️"],
   // temple etiquette
-  ["写真を撮ってもいいですか","shashin o totte mo ii desu ka","May I take a photo?","temple"],
-  ["靴を脱ぎますか","kutsu o nugimasu ka","Should I take my shoes off?","temple"],
-  ["入場料はいくらですか","nyūjōryō wa ikura desu ka","How much is admission?","temple"],
-  ["御朱印をお願いします","goshuin o onegai shimasu","A goshuin stamp, please","temple"],
-  ["ここは入れますか","koko wa hairemasu ka","May I enter here?","temple"],
-  ["お手洗いはどこですか","otearai wa doko desu ka","Where is the toilet?","temple"],
-  ["静かにします","shizuka ni shimasu","I'll be quiet","temple"],
-  ["お参りの仕方を教えてください","omairi no shikata o oshiete kudasai","How do I pray here?","temple"],
-  ["開いていますか","aite imasu ka","Is it open?","temple"],
-  ["ありがとうございました","arigatō gozaimashita","Thank you (afterwards)","temple"]
-].map((x,i)=>({id:"p"+i, jp:x[0], romaji:x[1], en:x[2], scene:x[3]}));
+  ["写真を撮ってもいいですか","shashin o totte mo ii desu ka","May I take a photo?","temple","📷"],
+  ["靴を脱ぎますか","kutsu o nugimasu ka","Should I take my shoes off?","temple","👟"],
+  ["入場料はいくらですか","nyūjōryō wa ikura desu ka","How much is admission?","temple","🎟️"],
+  ["御朱印をお願いします","goshuin o onegai shimasu","A goshuin stamp, please","temple","📿"],
+  ["ここは入れますか","koko wa hairemasu ka","May I enter here?","temple","🚪"],
+  ["お手洗いはどこですか","otearai wa doko desu ka","Where is the toilet?","temple","🚻"],
+  ["静かにします","shizuka ni shimasu","I'll be quiet","temple","🤫"],
+  ["お参りの仕方を教えてください","omairi no shikata o oshiete kudasai","How do I pray here?","temple","🙏"],
+  ["開いていますか","aite imasu ka","Is it open?","temple","🔓"],
+  ["ありがとうございました","arigatō gozaimashita","Thank you (afterwards)","temple","⛩️"]
+].map((x,i)=>({id:"p"+i, jp:x[0], romaji:x[1], en:x[2], scene:x[3], img:x[4]||"",
+  say:x[0].replace(/〜/g,"").replace(/\s*\/\s*/g,"、")}));
 
 const SCENES = {
   greetings:"Greetings", shopping:"Shopping", trains:"Trains & Directions",
@@ -260,6 +269,47 @@ function buildCards(){
 }
 const CARDS = buildCards();
 const CARD_BY_ID = Object.fromEntries(CARDS.map(c=>[c.id,c]));
+
+/* -------------------- AUDIO (Japanese TTS, offline) -------------------- */
+// Uses the device's built-in speech engine — on iOS that's the on-device
+// ja-JP voice (Kyoko), which works with no network. No audio files bundled.
+const HAS_TTS = (typeof window!=="undefined") && ("speechSynthesis" in window);
+let JA_VOICE = null;
+function pickJaVoice(){
+  if(!HAS_TTS) return;
+  const vs = speechSynthesis.getVoices() || [];
+  JA_VOICE = vs.find(v=>v.lang==="ja-JP")
+          || vs.find(v=>v.lang && v.lang.toLowerCase().indexOf("ja")===0)
+          || null;
+}
+if(HAS_TTS){
+  pickJaVoice();
+  speechSynthesis.onvoiceschanged = pickJaVoice;
+}
+// speak(text): pronounce Japanese text. Best-effort; silent if unsupported.
+function speak(text){
+  if(!HAS_TTS || !text) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP";
+    if(JA_VOICE) u.voice = JA_VOICE;
+    u.rate = 0.85; // a touch slow, easier to imitate
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+// What to pronounce for a given content entry.
+function sayOf(ref){ return ref.say || ref.jp || ""; }
+// A reusable round speaker button element wired to speak `text`.
+function speakerBtn(text, size){
+  const b = document.createElement("button");
+  b.className = "spk";
+  b.setAttribute("aria-label","Play pronunciation");
+  b.textContent = "🔊";
+  if(size) b.style.fontSize = size;
+  b.onclick = (e)=>{ e.stopPropagation(); speak(text); };
+  return b;
+}
 
 /* -------------------- STATE / STORAGE -------------------- */
 const STORE_KEY = "japandrill.v1";
@@ -578,11 +628,12 @@ function renderDrillKprod(){
       const ok = romajiMatches(inp.value, k.romaji);
       trackKata(k.jp, ok);
       inp.blur();
+      speak(k.jp); // hear the correct pronunciation (within the tap gesture)
       if(ok){
         fb.textContent = "✓ " + k.romaji; fb.className="feedback ok";
         // fast + correct => Easy(5), else Good(4)
         const q = t0 < 3500 ? 5 : 4;
-        setTimeout(()=>ctl.grade(card.id, q), 350);
+        setTimeout(()=>ctl.grade(card.id, q), 550);
       }else{
         fb.textContent = "✗ answer: " + k.romaji; fb.className="feedback no";
         checkBtn.textContent="Next →"; checkBtn.onclick=()=>ctl.grade(card.id, 1);
@@ -597,6 +648,7 @@ function renderDrillKprod(){
     wrap.querySelector("#skip").onclick=()=>{
       if(answered) return; answered=true;
       trackKata(k.jp,false);
+      speak(k.jp);
       fb.textContent="answer: "+k.romaji; fb.className="feedback no";
       checkBtn.textContent="Next →"; checkBtn.dataset.mode="next";
       checkBtn.onclick=()=>ctl.grade(card.id,1);
@@ -639,9 +691,10 @@ function renderDrillKrecog(){
         if(answered) return; answered=true;
         const ok = o.jp===k.jp;
         trackKata(k.jp, ok);
+        speak(k.jp); // hear the kana (within the tap gesture)
         [...grid.children].forEach(c=>{ if(c.textContent===k.jp) c.style.borderColor="var(--good)"; });
         if(ok){ b.style.background="var(--good)"; b.style.color="#04220f"; fb.textContent="✓"; fb.className="feedback ok";
-          setTimeout(()=>ctl.grade(card.id, ctl.elapsedCard()<3000?5:4), 350);
+          setTimeout(()=>ctl.grade(card.id, ctl.elapsedCard()<3000?5:4), 550);
         }else{
           b.style.background="var(--bad)"; b.style.color="#fff"; fb.textContent="✗ = "+k.jp; fb.className="feedback no";
           const nx=document.createElement("button"); nx.className="primary"; nx.textContent="Next →";
@@ -671,11 +724,13 @@ function renderDrillPhrase(){
         ${drillHeader(ctl.remaining)}
         <div class="card center">
           <div class="pill">${esc(tag)}</div>
-          <div style="font-size:1.5rem;margin:.5em 0 .3em">${esc(prompt)}</div>
+          ${r.img ? `<div class="emoji" aria-hidden="true">${r.img}</div>` : ""}
+          <div style="font-size:1.5rem;margin:.4em 0 .3em">${esc(prompt)}</div>
           <div id="reveal" style="display:none">
             <hr>
             <div class="jp jp-phrase">${esc(r.jp)}</div>
             <div class="romaji" style="margin-top:.3em">${esc(r.romaji)}</div>
+            <div id="spkslot" style="margin-top:12px"></div>
           </div>
         </div>
         <div id="controls"></div>
@@ -683,9 +738,11 @@ function renderDrillPhrase(){
     `);
     app.appendChild(wrap);
     const controls = wrap.querySelector("#controls");
-    const revealBtn = el(`<button class="primary">Show answer</button>`);
+    const revealBtn = el(`<button class="primary">Show answer 🔊</button>`);
     revealBtn.onclick=()=>{
       wrap.querySelector("#reveal").style.display="block";
+      wrap.querySelector("#spkslot").appendChild(speakerBtn(sayOf(r)));
+      speak(sayOf(r)); // auto-play on reveal (within the tap gesture)
       controls.innerHTML="";
       const g = el(`<div class="grid3">
         <button class="ghost" style="border-color:var(--again);color:var(--again)">Again</button>
@@ -722,23 +779,29 @@ function renderBrowse(){
   const list = document.createElement("div"); list.className="card";
   let items=[];
   if(browseFilter==="katakana"){
-    items = KATAKANA.map(k=>({jp:k.jp, romaji:k.romaji, en:accuracyStr(k.jp), scene:"katakana"}));
+    items = KATAKANA.map(k=>({jp:k.jp, romaji:k.romaji, en:accuracyStr(k.jp), img:"", say:k.jp}));
   }else if(browseFilter==="numbers"){
-    items = NUMBERS.map(n=>({jp:n.jp, romaji:n.romaji, en:n.en, scene:"numbers"}));
+    items = NUMBERS.map(n=>({jp:n.jp, romaji:n.romaji, en:n.en, img:n.img, say:n.say}));
   }else{
     let ph = PHRASES;
     if(browseFilter!=="all") ph = PHRASES.filter(p=>p.scene===browseFilter);
-    items = ph.map(p=>({jp:p.jp, romaji:p.romaji, en:p.en, scene:p.scene}));
+    items = ph.map(p=>({jp:p.jp, romaji:p.romaji, en:p.en, img:p.img, say:p.say}));
     if(browseFilter==="all"){
-      items = items.concat(NUMBERS.map(n=>({jp:n.jp,romaji:n.romaji,en:n.en,scene:"numbers"})));
+      items = items.concat(NUMBERS.map(n=>({jp:n.jp,romaji:n.romaji,en:n.en,img:n.img,say:n.say})));
     }
   }
   if(items.length===0) list.innerHTML="<div class='muted'>No items.</div>";
   items.forEach(it=>{
     const d=document.createElement("div"); d.className="browse-item";
-    d.innerHTML = `<div class="jp jp-phrase">${esc(it.jp)}</div>
+    const top=document.createElement("div"); top.className="top";
+    if(it.img){ const e=document.createElement("div"); e.className="emoji-sm"; e.textContent=it.img; top.appendChild(e); }
+    const txt=document.createElement("div"); txt.className="txt";
+    txt.innerHTML = `<div class="jp jp-phrase">${esc(it.jp)}</div>
       <div class="romaji">${esc(it.romaji)}</div>
       <div class="muted">${esc(it.en||"")}</div>`;
+    top.appendChild(txt);
+    top.appendChild(speakerBtn(it.say));
+    d.appendChild(top);
     list.appendChild(d);
   });
   app.appendChild(list);
